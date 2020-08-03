@@ -47,6 +47,8 @@ last=${obss[-1]}
 middle=${obss[$((num / 2))]}
 
 # What does this do?
+# Loads the appropriate NVIDIA driver / kernel components into user space, probably so
+# the docker container can be run against the GPU hardware
 nvidia-modprobe -u
 
 metafits=`ls -1 $last/*metafits* | head -1`

@@ -1,9 +1,10 @@
 #! python
+import os
 import sqlite3
 
 __author__ = 'Paul Hancock & Natasha Hurley-Walker'
 
-dbfile = 'GLEAM-X.sqlite'
+dbfile = os.environ['DBFILE'] 
 
 schema = """
 PRAGMA foreign_keys=ON;

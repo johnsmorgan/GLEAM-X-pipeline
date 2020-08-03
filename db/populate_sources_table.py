@@ -1,6 +1,7 @@
 #import urllib
 #import urllib2
 #import json
+import os
 import sys
 from astropy.coordinates import SkyCoord
 
@@ -8,7 +9,7 @@ import sqlite3
 
 __author__ = "Natasha Hurley-Walker"
 
-dbfile = 'GLEAM-X.sqlite'
+dbfile = os.environ['DBFILE']
 
 class Source:
     def __init__(self, name, pos, flux, alpha, beta):

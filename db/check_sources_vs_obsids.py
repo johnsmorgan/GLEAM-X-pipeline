@@ -1,3 +1,4 @@
+import os
 import sys
 from astropy.coordinates import SkyCoord
 from astropy import wcs
@@ -13,7 +14,7 @@ from beam_value_at_radec import beam_value
 
 __author__ = "Natasha Hurley-Walker"
 
-dbfile = 'GLEAM-X.sqlite'
+dbfile = os.environ['DBFILE']
 
 def insert_app(obs_id, source, appflux, infov, cur):
     cur.execute(""" INSERT OR REPLACE INTO calapparent
@@ -48,6 +49,7 @@ def create_wcs(ra, dec, cenchan):
     return w
 
 if __name__ == "__main__":
+    print 'Connecting to ', dbfile
     conn = sqlite3.connect(dbfile)
     cur = conn.cursor()
 
@@ -61,7 +63,7 @@ if __name__ == "__main__":
         print 'Getting all obsids from the user database'
         obsids = get_obs(cur)
     else:
-        print 'Reading osbids from ' + sys.argv[1]
+        print 'Reading obsids from ' + sys.argv[1]
         obsid = [i.strip() for i in open(sys.argv[1], 'r')]
 
     for row in obsids:
