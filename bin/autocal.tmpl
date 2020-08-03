@@ -61,8 +61,14 @@ then
 
     if [[ ! -e "${obsnum}_local_gleam_model.txt" ]]
     then
-        /group/mwasci/$SLURM_JOB_USER/GLEAM-X-pipeline/bin/crop_catalogue.py --ra=$RA --dec=$Dec --radius=30 --minflux=1.0 --metafits=${metafits} --catalogue=${catfile} --fluxcol=S_200 --plot ${obsnum}_local_gleam_model.png --output ${obsnum}_cropped_catalogue.fits
-        /group/mwasci/$SLURM_JOB_USER/GLEAM-X-pipeline/bin/vo2model.py --catalogue=${obsnum}_cropped_catalogue.fits --point --output=${obsnum}_local_gleam_model.txt --racol=RAJ2000 --decol=DEJ2000 --acol=a --bcol=b --pacol=pa --fluxcol=S_200 --alphacol=alpha
+        /group/mwasci/$SLURM_JOB_USER/GLEAM-X-pipeline/bin/crop_catalogue.py --ra=$RA --dec=$Dec --radius=30 --minflux=1.0 \
+                                                                            --metafits=${metafits} --catalogue=${catfile}  \
+                                                                            --fluxcol=S_200 --plot ${obsnum}_local_gleam_model.png \
+                                                                            --output ${obsnum}_cropped_catalogue.fits
+        /group/mwasci/$SLURM_JOB_USER/GLEAM-X-pipeline/bin/vo2model.py --catalogue=${obsnum}_cropped_catalogue.fits --point \
+                                                                        --output=${obsnum}_local_gleam_model.txt --racol=RAJ2000 \
+                                                                        --decol=DEJ2000 --acol=a --bcol=b --pacol=pa \
+                                                                        --fluxcol=S_200 --alphacol=alpha
     fi
     modeldir=.
     calmodel=${obsnum}_local_gleam_model.txt
@@ -79,6 +85,7 @@ else
         test_fail 1
         exit 1
     else
+        # TG: Think the '$' needs to be dropped
         $calmodel=`basename $calmodel`
     fi
 fi
@@ -111,7 +118,8 @@ if [[ ! -z $ion ]]
 then
     # Ionospheric triage
     solutions=${obsnum}_${calmodel%%.txt}_solutions_ts${ts}.bin
-    calibrate -t ${ts} -j ${cores} -m ${modeldir}/${calmodel} -minuv $minuvm -maxuv $maxuvm -applybeam -mwa-path ${MWAPATH} ${obsnum}.ms ${solutions}
+    calibrate -t ${ts} -j ${cores} -m ${modeldir}/${calmodel} -minuv $minuvm -maxuv $maxuvm -applybeam \
+              -mwa-path ${MWAPATH} ${obsnum}.ms ${solutions}
     aocal_plot.py --refant=127 --amp_max=2 ${solutions}
     aocal_diff.py --metafits=$metafits --names $solutions
     iono_update.py --ionocsv ${obsnum}_ionodiff.csv
@@ -121,7 +129,8 @@ fi
 solutions=${obsnum}_${calmodel%%.txt}_solutions_initial.bin
 
 # calibrate
-calibrate -j ${cores} -m ${modeldir}/${calmodel} -minuv $minuvm -maxuv $maxuvm -applybeam -mwa-path ${MWAPATH} ${obsnum}.ms ${solutions}
+calibrate -j ${cores} -m ${modeldir}/${calmodel} -minuv $minuvm -maxuv $maxuvm -applybeam \
+          -mwa-path ${MWAPATH} ${obsnum}.ms ${solutions}
 test_fail $?
 
 # plot calibration solutions

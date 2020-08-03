@@ -5,8 +5,8 @@ __author__ = "PaulHancock & Natasha Hurley-Walker"
 import os
 import sqlite3
 import sys
-
-db='/group/mwasci/nhurleywalker/GLEAM-X-pipeline/db/GLEAM-X.sqlite'
+    
+db=os.environ['DBFILE']
 
 def queue_job(job_id, task_id, submission_time, obs_id, user, batch_file, stderr, stdout, task):
     conn = sqlite3.connect(db)

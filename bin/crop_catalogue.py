@@ -69,6 +69,8 @@ alphacut = np.where(np.logical_not(np.isnan(data[options.alphacol])))
 indices = np.intersect1d(fluxcut,indices)
 indices = np.intersect1d(alphacut,indices)
 
+# indices = (separations < options.radius) & (data[options.fluxcol] > options.minflux) & (np.isfinite(data[options.alphacol]))
+
 # Now that we have some subset, check if beam attenuation is on, and if it is, attenuate and recalculate:
 
 if options.beamselect is True or options.attenuate is True:

@@ -55,7 +55,16 @@ if __name__ == "__main__":
     for row in get_srcs(cur):
         srclist.append(Source(row[0],SkyCoord(row[1],row[2],unit=u.deg),row[3],row[4],row[5]))
 
-    for row in get_obs(cur):
+    # Figure out where obsids are coming from
+    # TODO: Add a proper argument parser
+    if len(sys.argv) == 1:
+        print 'Getting all obsids from the user database'
+        obsids = get_obs(cur)
+    else:
+        print 'Reading osbids from ' + sys.argv[1]
+        obsid = [i.strip() for i in open(sys.argv[1], 'r')]
+
+    for row in obsids:
         w = create_wcs(row[1],row[2],row[3])
         t = Time(int(row[4]), format='gps')
         freq = 1.28 * row[3]

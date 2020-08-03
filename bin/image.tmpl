@@ -140,7 +140,9 @@ do
     cend=${chans[$j]}
     if [[ ! -e ${obsnum}_000${n}-${pol}-beam.fits ]]
     then
-        python /group/mwasci/nhurleywalker/mwa_pb_lookup/lookup_jones.py ${obsnum} _template.fits ${obsnum}_000${n}- -c $cstart-$cend --wsclean_names --beam_path /group/mwasci/pb_lookup/gleam_jones.hdf5
+        python /group/mwasci/nhurleywalker/mwa_pb_lookup/lookup_jones.py ${obsnum} _template.fits ${obsnum}_000${n}- \
+                                                                         -c $cstart-$cend --wsclean_names \
+                                                                         --beam_path /group/mwasci/pb_lookup/gleam_jones.hdf5
     fi
     for pol in $pols
     do

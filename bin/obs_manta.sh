@@ -34,6 +34,8 @@ gpubox=
 timeres=
 freqres=
 
+source "$dbdir/GLEAM-X-pipeline.profile"
+
 # parse args and set options
 while getopts ':tgd:p:s:k:o:' OPTION
 do
@@ -72,6 +74,12 @@ if [[ ! -z ${dep} ]]
 then
     depend="--dependency=afterok:${dep}"
 fi
+
+# Add the metadata to the observations table in the database
+python ${dbdir}/db/import_observations_from_db.py --obsid $obslist
+
+# And now record the apparent brightness of sources in the obs
+python ${dbdir}/db/check_sources_vs_obsids.py $obslist
 
 base=$base/$project
 cd $base
@@ -149,8 +157,8 @@ output=`echo ${output} | sed "s/%A/${jobid}/"`
 n=1
 for obsnum in $dllist
 do
-    python ${dbdir}/bin/track_task.py queue --jobid=${jobid} --taskid=${n} --task='download' --submission_time=`date +%s` --batch_file=${script} \
-                     --obs_id=${obsnum} --stderr=${error} --stdout=${output}
+    python ${dbdir}/bin/track_task.py queue --jobid=${jobid} --taskid=${n} --task='download' --submission_time=`date +%s` \
+                                            --batch_file=${script} --obs_id=${obsnum} --stderr=${error} --stdout=${output}
     ((n+=1))
 done
 

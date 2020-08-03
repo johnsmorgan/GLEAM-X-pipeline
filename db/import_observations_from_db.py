@@ -11,7 +11,7 @@ __author__ = "PaulHancock & Natasha Hurley-Walker"
 
 # Append the service name to this base URL, eg 'con', 'obs', etc.
 BASEURL = 'http://ws.mwatelescope.org/metadata/'
-dbfile = '/group/mwasci/nhurleywalker/GLEAM-X-pipeline/db/GLEAM-X.sqlite'
+dbfile = os.environ['DBFILE']
 
 # Function to call a JSON web service and return a dictionary: This function by Andrew Williams
 def getmeta(service='obs', params=None):
@@ -42,25 +42,6 @@ def getmeta(service='obs', params=None):
     # Return the result dictionary
     return result
 
-
-#def update_observation(obsid, obsname, cur):
-#    if 'CORR_MODE' in obsname:
-#        return
-#    elif 'FDS' in obsname:
-#        # eg FDS_DEC-55.0_93
-#        idx = obsname[3:-4]
-#    elif 'GCN' in obsname:
-#        idx = obsname[3:]
-#    else:
-#        idx = obsname
-#    cur.execute("SELECT count(name) FROM grb WHERE fermi_trigger_id = ?", (idx,))
-#    if cur.fetchone()[0] > 0:
-#        cur.execute("SELECT name FROM grb WHERE fermi_trigger_id = ?", (idx,))
-#        grb = cur.fetchone()[0]
-#        cur.execute("UPDATE observation SET grb = ? WHERE obs_id =?", (grb, obsid))
-#    return
-
-
 def copy_obs_info(obsid, cur):
     cur.execute("SELECT count(*) FROM observation WHERE obs_id =?",(obsid,))
     if cur.fetchone()[0] > 0:
@@ -89,31 +70,8 @@ def copy_obs_info(obsid, cur):
     metadata['calibration'], None, metadata['calibrators'],
     None, None, None, None, None, None,
     len(meta['files']), False))
-    #update_observation(obsid, meta['obsname'], cur)
+
     return
-
-#def update_grb_links(cur):
-#    # associate each observation with the corresponding grb
-#    cur.execute("SELECT obs_id, obsname FROM observation WHERE grb IS NULL")
-#    # need to do this to exhaust the generator so we can reuse the cursor
-#    obsids, obsnames = zip(*cur.fetchall())
-#    for obsid, obsname in zip(obsids, obsnames):
-#        update_observation(obsid, obsname, cur)
-#
-#    # now associate each calibration observation with a grb
-#    # this relies on the calibration observation being within 150sec of the regular obs
-#    cur.execute("""
-#    SELECT o.obs_id, b.grb
-#    FROM observation o JOIN observation b ON
-#    o.obs_id - b.obs_id BETWEEN -150 AND 150
-#    AND o.calibration AND b.grb IS NOT NULL
-#    AND o.obs_id != b.obs_id
-#    """)
-#    ids, grbs = zip(*cur.fetchall())
-#    for idx, grb in zip(ids, grbs):
-#        cur.execute("UPDATE observation SET grb=? WHERE obs_id=?", (grb, idx))
-#    return
-
 
 if __name__ == "__main__":
 
@@ -122,18 +80,15 @@ if __name__ == "__main__":
 
     args = ps.parse_args()
 
+    print 'Database file is: ', dbfile
+    
     if os.path.exists(args.obsids):
         filename, file_extension = os.path.splitext(args.obsids)
         if file_extension == ".txt":
-            ids = np.loadtxt(args.obsids, comments="#", dtype=int)
-# Makes it work for single-line files
-#            if len(ids.shape)==1:
-#               ids = [ids]
+            ids = np.loadtxt(args.obsids, comments="#", dtype=int, ndmin=1)
         else:
             print "Other file formats not yet enabled."
             sys.exit(1)
-#        elif file_extension == ".csv":
-#        elif file_extension == ".xml":
 
     conn = sqlite3.connect(dbfile)
     cur = conn.cursor()
