@@ -64,7 +64,7 @@ if __name__ == "__main__":
         obsids = get_obs(cur)
     else:
         print 'Reading obsids from ' + sys.argv[1]
-        obsid = [i.strip() for i in open(sys.argv[1], 'r')]
+        obsids = [i.strip() for i in open(sys.argv[1], 'r')]
 
     for row in obsids:
         w = create_wcs(row[1],row[2],row[3])
