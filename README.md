@@ -1,3 +1,7 @@
+# Branch Info
+
+In this branch I have added a small amount of logic to create a SQLite database for each user. The database is initialised in the GLEAM profile. To avoid the bulk importing of obsids obs\_mantra.sh has been updated to import the obsid metadata into the database, and add the corresponding apparent fluxes to the calapparent table. 
+
 # GLEAM-X-pipeline
 
 The goal of this pipeline is to reduce the data observed as part of the GLEAM-X project (G0008), but it is also applicable to many other MWA datasets. The pipeline is written for the Pawsey Magnus and Zeus systems which use a SLURM job scheduler. It borrows significantly from the MWA-Fast-Transients pipeline written by Paul Hancock and Gemma Anderson: https://github.com/PaulHancock/MWA-fast-image-transients.
