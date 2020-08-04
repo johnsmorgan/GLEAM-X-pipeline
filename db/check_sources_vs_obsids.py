@@ -30,10 +30,15 @@ def get_srcs(cur):
     return srciter
 
 # NB: Currently selects all observations; may want to finesse this later
-def get_obs(cur):
-    obsiter = cur.execute("""
-    SELECT obs_id, ra_pointing, dec_pointing, cenchan, starttime, delays
-    FROM observation """)
+def get_obs(cur, obs_id = None):
+    if obs_id is None:
+        obsiter = cur.execute("""
+        SELECT obs_id, ra_pointing, dec_pointing, cenchan, starttime, delays
+        FROM observation """)
+    else:
+        obsiter = cur.execute("""
+        SELECT obs_id, ra_pointing, dec_pointing, cenchan, starttime, delays
+        FROM observation WHERE obs_id == ? """, (obs_id, ))
     return obsiter
 
 def create_wcs(ra, dec, cenchan):
@@ -66,7 +71,13 @@ if __name__ == "__main__":
         print 'Reading obsids from ' + sys.argv[1]
         obsids = [i.strip() for i in open(sys.argv[1], 'r')]
 
+        # This could be done with one call with a change to the SQL WHERE
+        obsids = [list(get_obs(cur, obs_id=i))[0] for i in obsids]
+
+
     for row in obsids:
+        print row
+
         w = create_wcs(row[1],row[2],row[3])
         t = Time(int(row[4]), format='gps')
         freq = 1.28 * row[3]
