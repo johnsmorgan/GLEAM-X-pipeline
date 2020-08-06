@@ -31,14 +31,17 @@ def get_srcs(cur):
 
 # NB: Currently selects all observations; may want to finesse this later
 def get_obs(cur, obs_id = None):
+    
     if obs_id is None:
         obsiter = cur.execute("""
         SELECT obs_id, ra_pointing, dec_pointing, cenchan, starttime, delays
         FROM observation """)
+    
     else:
         obsiter = cur.execute("""
         SELECT obs_id, ra_pointing, dec_pointing, cenchan, starttime, delays
         FROM observation WHERE obs_id == ? """, (obs_id, ))
+    
     return obsiter
 
 def create_wcs(ra, dec, cenchan):
