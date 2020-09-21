@@ -6,6 +6,24 @@
 #SBATCH --time=04:00:00
 #SBATCH --nodes=1
 TASKLINE
+ARRAYLINE
+
+pipeuser=PIPEUSER
+source /group/mwasci/$pipeuser/GLEAM-X-pipeline/GLEAM-X-pipeline.profile
+obsnum=OBSNUM
+
+if [[ ! -z $SLURM_ARRAY_TASK_ID ]]
+then
+    taskid=${SLRUM_ARRAY_TASK_ID}
+    jobid=${SLRUM_ARRAY_JOB_ID}
+
+    echo "obsfile ${obsnum}, taskid ${taskid}"
+    obsnum=$(sed -n -e ${SLURM_ARRAY_TASK_ID}p ${obsnum})
+    echo "cotter obsid ${obsnum}"
+else
+    taskid=1
+    jobid=${SLRUM_JOBID}
+fi
 
 pipeuser=PIPEUSER
 
@@ -14,19 +32,18 @@ source /group/mwasci/$pipeuser/GLEAM-X-pipeline/GLEAM-X-pipeline.profile
 function test_fail {
 if [[ $1 != 0 ]]
 then
-    track_task.py fail --jobid=${SLURM_JOBID} --taskid=1 --finish_time=`date +%s`
+    track_task.py fail --jobid=${jobid} --taskid=${taskid} --finish_time=`date +%s`
     exit $1
 fi
 }
 
 datadir=DATADIR
-obsnum=OBSNUM
 tres=TRES
 fres=FRES
 memory=MEMORY
 
 # start task
-track_task.py start --jobid=${SLURM_JOBID} --taskid=1 --start_time=`date +%s`
+track_task.py start --jobid=${jobid} --taskid=${taskid} --start_time=`date +%s`
 
 cd ${datadir}
 
@@ -70,4 +87,4 @@ else
     echo "Cotter has already run for ${obsnum}.ms"
 fi
 
-track_task.py finish --jobid=${SLURM_JOBID} --taskid=1 --finish_time=`date +%s`
+track_task.py finish --jobid=${jobid} --taskid=${taskid} --finish_time=`date +%s`

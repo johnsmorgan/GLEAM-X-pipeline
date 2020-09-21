@@ -6,20 +6,34 @@
 #SBATCH --time=02:00:00
 #SBATCH --nodes=1
 TASKLINE
+ARRAYLINE
 
 pipeuser=PIPEUSER
 source /group/mwasci/$pipeuser/GLEAM-X-pipeline/GLEAM-X-pipeline.profile
+obsnum=OBSNUM
+
+if [[ ! -z $SLURM_ARRAY_TASK_ID ]]
+then
+    taskid=${SLRUM_ARRAY_TASK_ID}
+    jobid=${SLRUM_ARRAY_JOB_ID}
+
+    echo "obsfile ${obsnum}, taskid ${taskid}"
+    obsnum=$(sed -n -e ${SLURM_ARRAY_TASK_ID}p ${obsnum})
+    echo "autocal obsid ${obsnum}"
+else
+    taskid=1
+    jobid=${SLRUM_JOBID}
+fi
 
 function test_fail {
 if [[ $1 != 0 ]]
 then
-    track_task.py fail --jobid=${SLURM_JOBID} --taskid=1 --finish_time=`date +%s`
+    track_task.py fail --jobid=${jobid} --taskid=${taskid} --finish_time=`date +%s`
     exit $1
 fi
 }
 
 cores=`grep -P '^core id\t' /proc/cpuinfo  | wc -l`
-obsnum=OBSNUM
 datadir=DATADIR
 modeldir="/group/mwasci/code/anoko/mwa-reduce/models"
 refant=127
@@ -42,7 +56,7 @@ ion=IONOTEST
 ts=10
 
 # start
-track_task.py start --jobid=${SLURM_JOBID} --taskid=1 --start_time=`date +%s`
+track_task.py start --jobid=${jobid} --taskid=${taskid} --start_time=`date +%s`
 
 cd ${datadir}/${obsnum}
 metafits="${obsnum}.metafits"
@@ -138,4 +152,4 @@ test_fail $?
 aocal_plot.py --refant=${refant} --amp_max=2 ${solutions%.bin}_ref.bin
 test_fail $?
 
-track_task.py finish --jobid=${SLURM_JOBID} --taskid=1 --finish_time=`date +%s`
+track_task.py finish --jobid=${jobid} --taskid=${taskid} --finish_time=`date +%s`

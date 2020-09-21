@@ -85,6 +85,16 @@ then
 #    absmem=30 # Check this
 fi
 
+# Establish job array options
+if [[ -f ${obsnum} ]]
+then
+    numfiles=$(wc -l ${obslist} | awk '{print $1}')
+    jobarray="#SBATCH --array=1-${lines}"
+else
+    numfiles=1
+    jobarray=''
+fi
+
 dbdir="/group/mwasci/$pipeuser/GLEAM-X-pipeline/"
 codedir="/group/mwasci/$pipeuser/GLEAM-X-pipeline/"
 queue="-p $standardq"
@@ -106,10 +116,16 @@ cat ${codedir}bin/autocal.tmpl | sed -e "s:OBSNUM:${obsnum}:g" \
                                      -e "s:STANDARDQ:${standardq}:g" \
                                      -e "s:IONOTEST:${ion}:g" \
                                      -e "s:ACCOUNT:${account}:g" \
-                                     -e "s:PIPEUSER:${pipeuser}:g" > ${script}
+                                     -e "s:PIPEUSER:${pipeuser}:g" \
+                                     -e "s:JOBARRAY:${jobarray}" > ${script}
 
-output="${codedir}queue/logs/autocal_${obsnum}.o%A"
-error="${codedir}queue/logs/autocal_${obsnum}.e%A"
+
+   output="${codedir}queue/logs/autocal_${obsnum}.o%A"
+   error="${codedir}queue/logs/autocal_${obsnum}.e%A"
+else
+   output="${codedir}queue/logs/autocal_${obsnum}.o%A_%a"
+   error="${codedir}queue/logs/autocal_${obsnum}.e%A_%a"
+fi
 
 sub="sbatch -M $computer --output=${output} --error=${error} ${depend} ${queue} ${script}"
 
@@ -124,17 +140,27 @@ fi
 # submit job
 jobid=($(${sub}))
 jobid=${jobid[3]}
-taskid=1
 
-# rename the err/output files as we now know the jobid
-error=`echo ${error} | sed "s/%A/${jobid}/"`
-output=`echo ${output} | sed "s/%A/${jobid}/"`
+for line in $(seq 1 ${numfiles} 1)
+    do
+    taskid=line
 
-# record submission
-python ${dbdir}/bin/track_task.py queue --jobid=${jobid} --taskid=${taskid} --task='calibrate' --submission_time=`date +%s` --batch_file=${script} \
-                     --obs_id=${obsnum} --stderr=${error} --stdout=${output}
+    # rename the err/output files as we now know the jobid
+    obserror=`echo ${error} | sed -e "s/%A/${jobid}/" -e "s/%a/${taskid}/"`
+    obsoutput=`echo ${output} | sed -e "s/%A/${jobid}/" -e "s/%a/${taskid}/"`
 
-echo "Submitted ${script} as ${jobid} . Follow progress here:"
-echo $output
-echo $error
+    if [[ -f obsnum ]]
+    then
+        obs=$(sed -e -n ${taskid}p ${obsnum})
+    else
+        obs=obsnum
+    fi
 
+    # record submission
+    python ${dbdir}/bin/track_task.py queue --jobid=${jobid} --taskid=${taskid} --task='calibrate' --submission_time=`date +%s` --batch_file=${script} \
+                        --obs_id=${obs} --stderr=${obserror} --stdout=${obsoutput}
+
+    echo "Submitted ${script} as ${jobid} . Follow progress here:"
+    echo $obsoutput
+    echo $obserror
+done
