@@ -165,7 +165,7 @@ do
     
     if [[ -f ${obsnum} ]]
     then
-        obs=$(sed -n ${taskid}p ${obsnum})
+        obs=$(sed -n -e ${taskid}p ${obsnum})
     else
         obs=$obsnum
     fi
