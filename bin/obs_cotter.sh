@@ -87,8 +87,9 @@ fi
 # Establish job array options
 if [[ -f ${obsnum} ]]
 then
-    numfiles=$(wc -l ${obslist} | awk '{print $1}')
-    jobarray="#SBATCH --array=1-${lines}"
+    echo "${obsnum} file exists"
+    numfiles=$(wc -l ${obsnum} | awk '{print $1}')
+    jobarray="#SBATCH --array=1-${numfiles}"
 else
     numfiles=1
     jobarray=''
@@ -99,21 +100,24 @@ dbdir="/group/mwasci/$pipeuser/GLEAM-X-pipeline/"
 codedir="/group/mwasci/$pipeuser/GLEAM-X-pipeline/"
 datadir=/astro/mwasci/$pipeuser/$project
 
-if [[ $obsnum -lt 1151402936 ]] ; then
-    telescope="MWA128T"
-    basescale=1.1
-    if [[ -z $freqres ]] ; then freqres=40 ; fi
-    if [[ -z $timeres ]] ; then timeres=4 ; fi
-elif [[ $obsnum -ge 1151402936 ]] && [[ $obsnum -lt 1191580576 ]] ; then
-    telescope="MWAHEX"
-    basescale=2.0
-    if [[ -z $freqres ]] ; then freqres=40 ; fi
-    if [[ -z $timeres ]] ; then timeres=8 ; fi
-elif [[ $obsnum -ge 1191580576 ]] ; then
-    telescope="MWALB"
-    basescale=0.5
-    if [[ -z $freqres ]] ; then freqres=40 ; fi
-    if [[ -z $timeres ]] ; then timeres=4 ; fi
+if [[ ! -f ${obsnum} ]]
+then
+    if [[ $obsnum -lt 1151402936 ]] ; then
+        telescope="MWA128T"
+        basescale=1.1
+        if [[ -z $freqres ]] ; then freqres=40 ; fi
+        if [[ -z $timeres ]] ; then timeres=4 ; fi
+    elif [[ $obsnum -ge 1151402936 ]] && [[ $obsnum -lt 1191580576 ]] ; then
+        telescope="MWAHEX"
+        basescale=2.0
+        if [[ -z $freqres ]] ; then freqres=40 ; fi
+        if [[ -z $timeres ]] ; then timeres=8 ; fi
+    elif [[ $obsnum -ge 1191580576 ]] ; then
+        telescope="MWALB"
+        basescale=0.5
+        if [[ -z $freqres ]] ; then freqres=40 ; fi
+        if [[ -z $timeres ]] ; then timeres=4 ; fi
+    fi
 fi
 
 script="${codedir}queue/cotter_${obsnum}.sh"
@@ -127,7 +131,7 @@ cat ${codedir}bin/cotter.tmpl | sed -e "s:OBSNUM:${obsnum}:g" \
                                   -e "s:STANDARDQ:${standardq}:g" \
                                   -e "s:ACCOUNT:${account}:g" \
                                   -e "s:PIPEUSER:${pipeuser}:g" \
-                                  -e "s:JOBARRAY:${jobarray}" > ${script}
+                                  -e "s:ARRAYLINE:${jobarray}:g" > ${script}
 
 if [[ -z ${jobarray} ]]
 then
@@ -151,19 +155,19 @@ fi
 jobid=($(${sub}))
 jobid=${jobid[3]}
 
-for line in $(seq 1 ${numfiles} 1)
+for line in $(seq ${numfiles})
 do
-    taskid=line
+    taskid=$line
 
     # rename the err/output files as we now know the jobid
-    obserror=`echo ${error} | sed -e "s/%A/${jobid}/" -e "s/%a/${taskid}/"`
-    obsoutput=`echo ${output} | sed -e "s/%A/${jobid}/" -e "s/%a/${taskid}/"`
-
-    if [[ -f obsnum ]]
+    obserror=`echo ${error} | sed -e "s/%A/${jobid}/" | sed -e "s/%a/${taskid}/"`
+    obsoutput=`echo ${output} | sed -e "s/%A/${jobid}/" | sed -e "s/%a/${taskid}/"`
+    
+    if [[ -f ${obsnum} ]]
     then
-        obs=$(sed -e -n ${taskid}p ${obsnum})
+        obs=$(sed -n ${taskid}p ${obsnum})
     else
-        obs=obsnum
+        obs=$obsnum
     fi
 
     # record submission
