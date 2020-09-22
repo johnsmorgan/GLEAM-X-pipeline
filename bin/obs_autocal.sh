@@ -88,11 +88,13 @@ fi
 # Establish job array options
 if [[ -f ${obsnum} ]]
 then
-    numfiles=$(wc -l ${obslist} | awk '{print $1}')
-    jobarray="#SBATCH --array=1-${lines}"
+    echo "${obsnum} is a file that exists, proceeding with job-array set up"
+    numfiles=$(wc -l ${obsnum} | awk '{print $1}')
+    arrayline="#SBATCH --array=1-${numfiles}"
+    echo "Number of obsids to process: ${numfiles}"
 else
     numfiles=1
-    jobarray=''
+    arrayline=''
 fi
 
 dbdir="/group/mwasci/$pipeuser/GLEAM-X-pipeline/"
@@ -108,7 +110,6 @@ fi
 
 script="${codedir}queue/autocal_${obsnum}.sh"
 
-#                                     -e "s:DBDIR:${dbdir}:g" \
 cat ${codedir}bin/autocal.tmpl | sed -e "s:OBSNUM:${obsnum}:g" \
                                      -e "s:DATADIR:${datadir}:g" \
                                      -e "s:HOST:${computer}:g" \
@@ -117,14 +118,16 @@ cat ${codedir}bin/autocal.tmpl | sed -e "s:OBSNUM:${obsnum}:g" \
                                      -e "s:IONOTEST:${ion}:g" \
                                      -e "s:ACCOUNT:${account}:g" \
                                      -e "s:PIPEUSER:${pipeuser}:g" \
-                                     -e "s:JOBARRAY:${jobarray}" > ${script}
+                                     -e "s:ARRAYLINE:${arrayline}:g" > ${script}
 
 
-   output="${codedir}queue/logs/autocal_${obsnum}.o%A"
-   error="${codedir}queue/logs/autocal_${obsnum}.e%A"
-else
-   output="${codedir}queue/logs/autocal_${obsnum}.o%A_%a"
-   error="${codedir}queue/logs/autocal_${obsnum}.e%A_%a"
+output="${codedir}queue/logs/autocal_${obsnum}.o%A"
+error="${codedir}queue/logs/autocal_${obsnum}.e%A"
+
+if [[ -f ${obsnum} ]]
+then
+   output="${output}_%a"
+   error="${error}_%a"
 fi
 
 sub="sbatch -M $computer --output=${output} --error=${error} ${depend} ${queue} ${script}"
@@ -141,26 +144,25 @@ fi
 jobid=($(${sub}))
 jobid=${jobid[3]}
 
-for line in $(seq 1 ${numfiles} 1)
-    do
-    taskid=line
+echo "Submitted ${script} as ${jobid} . Follow progress here:"
 
+for taskid in $(seq ${numfiles})
+    do
     # rename the err/output files as we now know the jobid
     obserror=`echo ${error} | sed -e "s/%A/${jobid}/" -e "s/%a/${taskid}/"`
     obsoutput=`echo ${output} | sed -e "s/%A/${jobid}/" -e "s/%a/${taskid}/"`
 
-    if [[ -f obsnum ]]
+    if [[ -f ${obsnum} ]]
     then
-        obs=$(sed -e -n ${taskid}p ${obsnum})
+        obs=$(sed -n -e ${taskid}p ${obsnum})
     else
-        obs=obsnum
+        obs=$obsnum
     fi
 
     # record submission
     python ${dbdir}/bin/track_task.py queue --jobid=${jobid} --taskid=${taskid} --task='calibrate' --submission_time=`date +%s` --batch_file=${script} \
                         --obs_id=${obs} --stderr=${obserror} --stdout=${obsoutput}
 
-    echo "Submitted ${script} as ${jobid} . Follow progress here:"
     echo $obsoutput
     echo $obserror
 done

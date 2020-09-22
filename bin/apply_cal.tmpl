@@ -5,26 +5,43 @@
 #SBATCH --account=ACCOUNT
 #SBATCH --time=06:00:00
 #SBATCH --nodes=1
+ARRAYLINE
 
 pipeuser=PIPEUSER
-
 source /group/mwasci/$pipeuser/GLEAM-X-pipeline/GLEAM-X-pipeline.profile
+obsnum=OBSNUM
+
+# If obsnum is a file, then we are in an array job
+if [[ -f ${obsnum} ]]
+then
+    taskid=${SLURM_ARRAY_TASK_ID}
+    jobid=${SLURM_ARRAY_JOB_ID}
+
+    echo "obsfile ${obsnum}"
+    obsnum=$(sed -n -e ${SLURM_ARRAY_TASK_ID}p ${obsnum})
+    echo "apply_cal obsid ${obsnum}"
+else
+    taskid=1
+    jobid=${SLURM_JOB_ID}
+fi
+
+echo "jobid: ${jobid}"
+echo "taskid: ${taskid}"
 
 function test_fail {
 if [[ $1 != 0 ]]
 then
-    track_task.py fail --jobid=${SLURM_JOBID} --taskid=1 --finish_time=`date +%s`
+    track_task.py fail --jobid=${jobid} --taskid=${taskid} --finish_time=`date +%s`
     exit $1
 fi
 }
 
 calid=CALID
 base=BASEDIR
-obsnum=OBSNUM
 debug=DEBUG
 
 # apply calibration
-track_task.py start --jobid=${SLURM_JOBID} --taskid=1 --start_time=`date +%s`
+track_task.py start --jobid=${jobid} --taskid=${taskid} --start_time=`date +%s`
 
 cd ${base}/${obsnum}
 
@@ -36,7 +53,7 @@ if [[ $? != 0 ]]
 then
     echo "Could not find calibrator file"
     echo "looked for latest of: ${base}/${calid}/${calid}*solutions*.bin"
-    track_task.py fail --jobid=${SLURM_JOBID} --taskid=1 --finish_time=`date +%s`
+    track_task.py fail --jobid=${jobid} --taskid=${taskid} --finish_time=`date +%s`
     exit 1
 fi
 
@@ -51,4 +68,4 @@ fi
 
 test_fail $?
 
-track_task.py finish --jobid=${SLURM_JOBID} --taskid=1 --finish_time=`date +%s`
+track_task.py finish --jobid=${jobid} --taskid=${taskid} --finish_time=`date +%s`
