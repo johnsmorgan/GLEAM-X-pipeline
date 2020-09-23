@@ -135,7 +135,7 @@ cat ${codedir}bin/cotter.tmpl | sed -e "s:OBSNUM:${obsnum}:g" \
 
 output="${codedir}queue/logs/cotter_${obsnum}.o%A"
 error="${codedir}queue/logs/cotter_${obsnum}.e%A"
-if [[ -fz ${obsnum} ]]
+if [[ -f ${obsnum} ]]
 then
    output="${output}_%a"
    error="${error}_%a"
