@@ -269,7 +269,7 @@ else:
             
         # RA plot after RA (and Dec) correction
             y = final_c[good][indices]
-        make_plot(x, y, w, zmodel, title, "RA offset (deg)", ra_corrected_plot)
+            make_plot(x, y, w, zmodel, title, "RA offset (deg)", ra_corrected_plot)
 
 if results.do_rescale is True:
     for fitsimage in infiles:
