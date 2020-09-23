@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from __future__ import print_function
 from astropy.time import Time
 from astropy.io import fits
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord
@@ -277,9 +277,11 @@ if results.do_rescale is True:
             extlist = ["", "_bkg", "_rms", "_weight", "_comp"]
         else:
             extlist = [""]
+
         for ext in extlist:
             infits = fitsimage.replace(".fits", ext+".fits")
             outfits = infits.replace(ext+".fits", "_rescaled"+ext+".fits")
+            
             if (not os.path.exists(outfits)) or results.overwrite is True:
                 print("Creating {0} from {1}".format(outfits, infits))
         # Modify each fits file to produce a new version
@@ -306,6 +308,7 @@ if results.do_rescale is True:
                 # wcs in format [stokes,freq,y,x]; stokes and freq are length 1 if they exist
                     w = wcs.WCS(hdu_in[0].header, naxis=2)
                     naxes = hdu_in[0].header["NAXIS"]
+            
             # going to need the RA in order to calculate the RA offsets
                     path, fl = os.path.split(infits)
                     meta = fits.getheader("{0}/{1}.metafits".format(path, fl[0:10]))
@@ -326,17 +329,23 @@ if results.do_rescale is True:
                     ra, dec = w.wcs_pix2world(indexes,1).transpose()
                     dec_corr = np.zeros(dec.shape)
                     ra_corr = np.zeros(ra.shape)
+                    
                     for i in range(0,results.poly_order+1):
                         dec_corr += P_dec[i]*pow(dec, results.poly_order-i)
                     dec_corr = 10**dec_corr
+                    
                     if results.correct_ra is True:
                         for i in range(0,results.poly_order+1):
                             ra_corr += P_ra[i]*pow(ra-ra_cent, results.poly_order-i)
                         ra_corr = 10**ra_corr
                         corr = dec_corr * ra_corr
+                    
                     else:
                         corr = dec_corr
+                    
                     corr = corr.reshape(hdu_in[0].data.shape[m],hdu_in[0].data.shape[n])
                     hdu_in[0].data = np.array(corr*hdu_in[0].data, dtype=np.float32)
+                    
+                    
                     hdu_in.writeto(outfits, overwrite=True)
                     hdu_in.close()
