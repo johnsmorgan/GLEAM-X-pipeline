@@ -29,6 +29,7 @@ group1.add_argument('--filelist',dest="filelist",default=None,
                         source-finding results, and also the <obsid>.metafits")
 group1.add_argument('--skymodel',dest="skymodel",default=None,
                   help="Sky model to cross-match to (no default)")
+
 group2 = parser.add_argument_group("Control options")
 group2.add_argument('--nsrc',dest="nsrc",default=10000,type=int,
                   help="Number of sources to use for the polynomial fit (default=10000)")
@@ -39,6 +40,7 @@ group2.add_argument('--order',dest="poly_order",default=5,type=int,
                   help="Set the order of the polynomial fit. (default = 5)")
 group2.add_argument('--ra',action="store_true",dest="correct_ra",default=False,
                   help="Measure and correct any RA-offset dependence? (default = False)")
+
 group3 = parser.add_argument_group("Creation of output files")
 group3.add_argument('--plot',action="store_true",dest="make_plots",default=False,
                   help="Make fit plots? (default = False)")
@@ -58,13 +60,16 @@ if os.path.exists(results.filelist):
     f = open(results.filelist, 'r+')
     infiles = [line.rstrip() for line in f.readlines()]
     f.close()
+
     concat_table = results.filelist.replace(".txt", "_concat.fits")
     title = results.filelist.replace(".txt","")
     dec_plot = results.filelist.replace(".txt", "_fitted_dec_poly.png")
     dec_corrected_plot = results.filelist.replace(".txt", "_corrected_dec_poly.png")
+    
     if results.correct_ra is True:
         ra_plot = results.filelist.replace(".txt", "_fitted_ra_poly.png")
         ra_corrected_plot = results.filelist.replace(".txt", "_corrected_ra_poly.png")
+
 # TODO: Replace these with database calls?
     if results.write_coefficients is True or results.read_coefficients is True:
         dec_coeff = results.filelist.replace(".txt", "_dec_coefficients.csv")
@@ -115,6 +120,7 @@ if results.read_coefficients is True:
     if results.correct_ra is True:
         P_ra = np.loadtxt(ra_coeff, delimiter=",")
         ramodel = np.poly1d(P_ra)
+
 else:
     logratios = np.empty(0)
     int_fluxes = np.empty(0)
@@ -128,7 +134,8 @@ else:
     for fitsimage in infiles:
         sf = fitsimage.replace(".fits", "_comp.fits")
         sfm = fitsimage.replace(".fits", "_comp_matched.fits")
-    # Cross-match with a sky model to get model flux densities
+    
+        # Cross-match with a sky model to get model flux densities
         if not os.path.exists(sfm):
             # Rely on the user running Aegean and just fail if the source-finding isn't there
             if not os.path.exists(sf):
@@ -141,21 +148,26 @@ else:
             matcher=sky params=45 \
             out={2}".format(results.skymodel, sf, sfm))
         gpstime = Time(int(fitsimage[0:10]), format="gps")
-    # We get this from the FITS image rather than the metafits because I make sub-band images
+    
+        # We get this from the FITS image rather than the metafits because I make sub-band images
         hdr = fits.getheader(fitsimage)
         centfreq = hdr["CRVAL3"] / 1.e6 #MHz
-    # But the metafits is better for the RA, because of the denormal projection
+    
+        # But the metafits is better for the RA, because of the denormal projection
         path, _ = os.path.split(fitsimage)
         meta = fits.getheader("{0}/{1}.metafits".format(path, fitsimage[0:10]))
         ra_cent = meta["RA"]
-    # Get the cross-matched catalogue
+        
+        # Get the cross-matched catalogue
         hdu = fits.open(sfm)
         cat = hdu[1].data
-    # RA offsets and Decs
+    
+        # RA offsets and Decs
         ras = np.append(ras, cat["RAJ2000"])
         ra_offs = np.append(ra_offs, cat["RAJ2000"] - ra_cent*np.ones(len(cat["RAJ2000"])))
         decs = np.append(decs, cat["DEJ2000"])
-    # Flux densities
+    
+        # Flux densities
         int_fluxes = np.append(int_fluxes, cat["int_flux"])
         S200s = np.append(S200s, cat["S_200"])
         alphas = np.append(alphas, cat["alpha"])

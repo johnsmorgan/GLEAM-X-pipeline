@@ -87,6 +87,19 @@ then
 #    absmem=30 # Check this
 fi
 
+
+# Establish job array options
+if [[ -f ${obsnum} ]]
+then
+    echo "${obsnum} is a file that exists, proceeding with job-array set up"
+    numfiles=$(wc -l ${obsnum} | awk '{print $1}')
+    arrayline="#SBATCH --array=1-${numfiles}"
+    echo "Number of obsids to process: ${numfiles}"
+else
+    numfiles=1
+    arrayline=''
+fi
+
 dbdir="/group/mwasci/$pipeuser/GLEAM-X-pipeline/"
 codedir="/group/mwasci/$pipeuser/GLEAM-X-pipeline/"
 queue="-p $standardq"
@@ -100,7 +113,6 @@ fi
 
 script="${codedir}queue/uvflag_${obsnum}.sh"
 
-#                                     -e "s:DBDIR:${dbdir}:g" \
 cat ${codedir}bin/uvflag.tmpl | sed -e "s:OBSNUM:${obsnum}:g" \
                                      -e "s:DATADIR:${datadir}:g" \
                                      -e "s:HOST:${computer}:g" \
@@ -108,10 +120,17 @@ cat ${codedir}bin/uvflag.tmpl | sed -e "s:OBSNUM:${obsnum}:g" \
                                      -e "s:STANDARDQ:${standardq}:g" \
                                      -e "s:DEBUG:${debug}:g" \
                                      -e "s:ACCOUNT:${account}:g" \
-                                     -e "s:PIPEUSER:${pipeuser}:g"> ${script}
+                                     -e "s:PIPEUSER:${pipeuser}:g" \
+                                     -e "s:ARRAYLINE:${arrayline}:g"> ${script}
 
 output="${codedir}queue/logs/uvflag_${obsnum}.o%A"
 error="${codedir}queue/logs/uvflag_${obsnum}.e%A"
+
+if [[ -f ${obsnum} ]]
+then
+   output="${output}_%a"
+   error="${error}_%a"
+fi
 
 #sub="sbatch -M $computer --output=${output} --error=${error} --begin=now+3hours ${depend} ${queue} ${script}"
 sub="sbatch -M $computer --output=${output} --error=${error} ${depend} ${queue} ${script}"
@@ -127,17 +146,26 @@ fi
 # submit job
 jobid=($(${sub}))
 jobid=${jobid[3]}
-taskid=1
-
-# rename the err/output files as we now know the jobid
-error=`echo ${error} | sed "s/%A/${jobid}/"`
-output=`echo ${output} | sed "s/%A/${jobid}/"`
-
-# record submission
-python ${dbdir}/bin/track_task.py queue --jobid=${jobid} --taskid=${taskid} --task='uvflag' --submission_time=`date +%s` --batch_file=${script} \
-                     --obs_id=${obsnum} --stderr=${error} --stdout=${output}
 
 echo "Submitted ${script} as ${jobid} . Follow progress here:"
-echo $output
-echo $error
 
+for taskid in $(seq ${numfiles})
+    do
+    # rename the err/output files as we now know the jobid
+    obserror=`echo ${error} | sed -e "s/%A/${jobid}/" -e "s/%a/${taskid}/"`
+    obsoutput=`echo ${output} | sed -e "s/%A/${jobid}/" -e "s/%a/${taskid}/"`
+
+    if [[ -f ${obsnum} ]]
+    then
+        obs=$(sed -n -e ${taskid}p ${obsnum})
+    else
+        obs=$obsnum
+    fi
+
+    # record submission
+    python ${dbdir}/bin/track_task.py queue --jobid=${jobid} --taskid=${taskid} --task='uvflag' --submission_time=`date +%s` --batch_file=${script} \
+                        --obs_id=${obs} --stderr=${obserror} --stdout=${obsoutput}
+
+    echo $obsoutput
+    echo $obserror
+done
