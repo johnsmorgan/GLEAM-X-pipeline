@@ -130,6 +130,7 @@ maxuvm=`echo "390000 / ($chan + 11)" | bc -l`
 
 if [[ ! -z $ion ]]
 then
+    echo "Performing ionospheric triage. "
     # Ionospheric triage
     solutions=${obsnum}_${calmodel%%.txt}_solutions_ts${ts}.bin
     # Remove duplicate obsnum

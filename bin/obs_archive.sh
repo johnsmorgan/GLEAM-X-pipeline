@@ -8,7 +8,7 @@ usage()
 {
 echo "obs_archive.sh [-d dep] [-p project] [-a account] [-u user] [-e endpoint] [-r remote_directory] [-t] obsnum
 
-Archives the processed data products onto the data central archive system. By default traffic is routed through a nimbus instance, requiring a public ssh key to first be added to list of authorized keys. Data Central runs ownCloud, and at the moment easiest way through is a 'davfs2' mount. Consult Natasha or Tim. 
+Archives the processed data products onto the data central archive system. By default traffic is routed through a nimbus instance, requiring a public ssh key to first be added to list of authorized keys. Data Central runs ownCloud, and at the moment easiest way through is a davfs2 mount. Consult Natasha or Tim. 
 
   -d dep      : job number for dependency (afterok)
   -a account  : computing account, default pawsey0272
@@ -171,7 +171,7 @@ for taskid in $(seq ${numfiles})
     fi
 
     # record submission
-    python ${dbdir}/bin/track_task.py queue --jobid=${jobid} --taskid=${taskid} --task='archive' --submission_time=`date +%s` --batch_file=${script} \
+    track_task.py queue --jobid=${jobid} --taskid=${taskid} --task='archive' --submission_time=`date +%s` --batch_file=${script} \
                         --obs_id=${obs} --stderr=${obserror} --stdout=${obsoutput}
 
     echo $obsoutput
