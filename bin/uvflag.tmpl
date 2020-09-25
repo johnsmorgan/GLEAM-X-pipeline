@@ -42,7 +42,7 @@ then
 fi
 }
 
-track_task.py start --jobid=${jobid} --taskid=${taskid} --finish_time=`date +%s`
+track_task.py start --jobid=${jobid} --taskid=${taskid} --start_time=`date +%s`
 
 cores=`grep -P '^core id\t' /proc/cpuinfo  | wc -l`
 

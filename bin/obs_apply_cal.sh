@@ -8,12 +8,15 @@ echo "obs_apply_cal.sh [-p project] [-d dep] [-a account] [-c calid] [-z] [-t] o
   -a account : computing account, default pawsey0272
   -c calid    : obsid for calibrator.
                 project/calid/calid_*_solutions.bin will be used
-                to calibrate if it exists, otherwise job will fail.
+                to calibrate if it exists. A file can be supplied with the 
+                obsids for the calibration fields that correspond to the 
+                obsids specified in the obsid file, if it is provided. 
+                Otherwise job will fail.
   -z          : Debugging mode: create a new CORRECTED_DATA column
                 instead of applying to the DATA column
   -t          : test. Don't submit job, just make the batch file
                 and then return the submission command
-  obsnum      : the obsid to process" 1>&2;
+  obsnum      : the obsid to process, or a text file of obsids (newline separated)" 1>&2;
 exit 1;
 }
 
@@ -41,6 +44,7 @@ fi
 
 #initial variables
 scratch=/astro
+group=/group
 dep=
 calid=
 tst=
@@ -113,6 +117,7 @@ fi
 queue="-p $standardq"
 dbdir="/group/mwasci/$pipeuser/GLEAM-X-pipeline/"
 base="$scratch/mwasci/$pipeuser/$project/"
+code="$group/mwasci/$pipeuser/GLEAM-X-pipeline/"
 
 if [[ $? != 0 ]]
 then
@@ -124,9 +129,7 @@ fi
 
 script="${dbdir}queue/apply_cal_${obsnum}.sh"
 
-cd $dbdir/bin
-
-cat apply_cal.tmpl | sed -e "s:OBSNUM:${obsnum}:g" \
+cat ${code}/bin/apply_cal.tmpl | sed -e "s:OBSNUM:${obsnum}:g" \
                                      -e "s:BASEDIR:${base}:g" \
                                      -e "s:HOST:${computer}:g" \
                                      -e "s:STANDARDQ:${standardq}:g" \
@@ -141,8 +144,8 @@ error="${dbdir}queue/logs/apply_cal_${obsnum}.e%A"
 
 if [[ -f ${obsnum} ]]
 then
-   output="${output}_%a"
-   error="${error}_%a"
+    output="${output}_%a"
+    error="${error}_%a"
 fi
 
 sub="sbatch --begin=now+15 --output=${output} --error=${error} ${dep} ${queue} ${script}"
@@ -174,7 +177,7 @@ for taskid in $(seq ${numfiles})
     fi
 
     # record submission
-    python ${dbdir}/bin/track_task.py queue --jobid=${jobid} --taskid=${taskid} --task='apply_cal' --submission_time=`date +%s` --batch_file=${script} \
+    track_task.py queue --jobid=${jobid} --taskid=${taskid} --task='apply_cal' --submission_time=`date +%s` --batch_file=${script} \
                         --obs_id=${obs} --stderr=${obserror} --stdout=${obsoutput}
 
     echo $obsoutput

@@ -11,7 +11,7 @@ echo "obs_autocal.sh [-d dep] [-a account] [-t] obsnum
   -i iono    : run the ionospheric metric tests (default = True)
   -t         : test. Don't submit job, just make the batch file
                and then return the submission command
-  obsnum     : the obsid to process" 1>&2;
+  obsnum     : the obsid to process, or a text file of obsids (newline separated)" 1>&2;
 exit 1;
 }
 

@@ -3,13 +3,14 @@
 #SBATCH -M HOST
 #SBATCH -p STANDARDQ
 #SBATCH --account=ACCOUNT
-#SBATCH --time=06:00:00
+#SBATCH --time=01:00:00
 #SBATCH --nodes=1
 ARRAYLINE
 
 pipeuser=PIPEUSER
 source /group/mwasci/$pipeuser/GLEAM-X-pipeline/GLEAM-X-pipeline.profile
 obsnum=OBSNUM
+calid=CALID
 
 # If obsnum is a file, then we are in an array job
 if [[ -f ${obsnum} ]]
@@ -25,6 +26,14 @@ else
     jobid=${SLURM_JOB_ID}
 fi
 
+# If obsnum is a file, then we are in an array job
+if [[ -f ${calid} ]]
+then
+    echo "calid file is ${calid}"
+    calid=$(sed -n -e ${taskid}p ${calid})
+    echo "apply_cal calid ${calid}"
+fi
+
 echo "jobid: ${jobid}"
 echo "taskid: ${taskid}"
 
@@ -36,7 +45,6 @@ then
 fi
 }
 
-calid=CALID
 base=BASEDIR
 debug=DEBUG
 
@@ -56,6 +64,8 @@ then
     track_task.py fail --jobid=${jobid} --taskid=${taskid} --finish_time=`date +%s`
     exit 1
 fi
+
+echo "Calibration file is ${calfile}"
 
 # If in debugging mode, apply to the CORRECTED_DATA column
 if [[ ! -z $debug ]]

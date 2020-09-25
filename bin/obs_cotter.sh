@@ -10,7 +10,7 @@ echo "obs_cotter.sh [-p project] [-d dep] [-a account] [-t] obsnum
   -k freqres  : freq resolution in KHz. default = 40 kHz
   -t          : test. Don't submit job, just make the batch file
                 and then return the submission command
-  obsnum      : the obsid to process" 1>&2;
+  obsnum      : the obsid to process, or a text file of obsids (newline separated)" 1>&2;
 exit 1;
 }
 
@@ -100,25 +100,36 @@ dbdir="/group/mwasci/$pipeuser/GLEAM-X-pipeline/"
 codedir="/group/mwasci/$pipeuser/GLEAM-X-pipeline/"
 datadir=/astro/mwasci/$pipeuser/$project
 
-if [[ ! -f ${obsnum} ]]
+if [[ -f ${obsnum} ]]
 then
-    if [[ $obsnum -lt 1151402936 ]] ; then
-        telescope="MWA128T"
-        basescale=1.1
-        if [[ -z $freqres ]] ; then freqres=40 ; fi
-        if [[ -z $timeres ]] ; then timeres=4 ; fi
-    elif [[ $obsnum -ge 1151402936 ]] && [[ $obsnum -lt 1191580576 ]] ; then
-        telescope="MWAHEX"
-        basescale=2.0
-        if [[ -z $freqres ]] ; then freqres=40 ; fi
-        if [[ -z $timeres ]] ; then timeres=8 ; fi
-    elif [[ $obsnum -ge 1191580576 ]] ; then
-        telescope="MWALB"
-        basescale=0.5
-        if [[ -z $freqres ]] ; then freqres=40 ; fi
-        if [[ -z $timeres ]] ; then timeres=4 ; fi
-    fi
+    echo "Detected a list of obsids, selecting the first to set cotter configurables"
+    testobs=$(sed -n -e 1p ${obsnum})
+else
+    testobs=${obsnum}
 fi
+
+if [[ $testobs -lt 1151402936 ]] ; then
+    telescope="MWA128T"
+    basescale=1.1
+    if [[ -z $freqres ]] ; then freqres=40 ; fi
+    if [[ -z $timeres ]] ; then timeres=4 ; fi
+elif [[ $testobs -ge 1151402936 ]] && [[ $testobs -lt 1191580576 ]] ; then
+    telescope="MWAHEX"
+    basescale=2.0
+    if [[ -z $freqres ]] ; then freqres=40 ; fi
+    if [[ -z $timeres ]] ; then timeres=8 ; fi
+elif [[ $testobs -ge 1191580576 ]] ; then
+    telescope="MWALB"
+    basescale=0.5
+    if [[ -z $freqres ]] ; then freqres=40 ; fi
+    if [[ -z $timeres ]] ; then timeres=4 ; fi
+fi
+
+echo "Observation configurables are"
+echo "- Telescope: ${telescope}"
+echo "- Basescale: ${basescale}"
+echo "- Freq Res.: ${freqres}"
+echo "- Time Res.: ${timeres}"
 
 script="${codedir}queue/cotter_${obsnum}.sh"
 cat ${codedir}bin/cotter.tmpl | sed -e "s:OBSNUM:${obsnum}:g" \
