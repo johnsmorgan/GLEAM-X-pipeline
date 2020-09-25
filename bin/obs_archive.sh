@@ -18,7 +18,8 @@ Archives the processed data products onto the data central archive system. By de
   -r remote   : remote directory to copy files to (default: '$remote')
   -t          : test. Don't submit job, just make the batch file
                 and then return the submission command
-  obsnum      : the obsid to process" 1>&2;
+  obsnum      : the obsid to process, or a text file of obsids (newline separated). 
+               A job-array task will be submitted to process the collection of obsids. " 1>&2;
 exit 1;
 }
 

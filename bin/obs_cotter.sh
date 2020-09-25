@@ -10,7 +10,8 @@ echo "obs_cotter.sh [-p project] [-d dep] [-a account] [-t] obsnum
   -k freqres  : freq resolution in KHz. default = 40 kHz
   -t          : test. Don't submit job, just make the batch file
                 and then return the submission command
-  obsnum      : the obsid to process, or a text file of obsids (newline separated)" 1>&2;
+  obsnum      : the obsid to process, or a text file of obsids (newline separated). 
+               A job-array task will be submitted to process the collection of obsids. " 1>&2;
 exit 1;
 }
 

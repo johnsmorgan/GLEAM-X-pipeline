@@ -10,7 +10,8 @@ echo "obs_autoflag.sh [-p project] [-a account] [-d dep] [-t] obsnum
   -d dep     : job number for dependency (afterok)
   -t         : test. Don't submit job, just make the batch file
                and then return the submission command
-  obsnum     : the obsid to process, or a text file of obsids (newline separated)s" 1>&2;
+  obsnum     : the obsid to process, or a text file of obsids (newline separated). 
+               A job-array task will be submitted to process the collection of obsids. " 1>&2;
 exit 1;
 }
 

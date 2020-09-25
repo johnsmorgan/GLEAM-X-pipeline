@@ -12,7 +12,8 @@ echo "obs_uvflag.sh [-p project] [-d dep] [-a account] [-z] [-t] obsnum
                 instead of flagging the DATA column
   -t         : test. Don't submit job, just make the batch file
                and then return the submission command
-  obsnum     : the obsid to process, or a text file of obsids (newline separated)" 1>&2;
+  obsnum     : the obsid to process, or a text file of obsids (newline separated). 
+               A job-array task will be submitted to process the collection of obsids. " 1>&2;
 exit 1;
 }
 
