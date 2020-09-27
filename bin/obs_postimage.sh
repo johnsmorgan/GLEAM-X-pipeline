@@ -84,7 +84,12 @@ fi
 
 if [[ ! -z ${dep} ]]
 then
-    depend="--dependency=afterok:${dep}"
+    if [[ -f ${obsnum} ]]
+    then
+        depend="--dependency=aftercorr:${dep}"
+    else
+        depend="--dependency=afterok:${dep}"
+    fi
 fi
 
 if [[ -z ${account} ]]
@@ -95,10 +100,8 @@ fi
 # Establish job array options
 if [[ -f ${obsnum} ]]
 then
-    echo "${obsnum} is a file that exists, proceeding with job-array set up"
     numfiles=$(wc -l ${obsnum} | awk '{print $1}')
     arrayline="#SBATCH --array=1-${numfiles}"
-    echo "Number of obsids to process: ${numfiles}"
 else
     numfiles=1
     arrayline=''
@@ -157,7 +160,7 @@ for taskid in $(seq ${numfiles})
     fi
 
     # record submission
-    python ${dbdir}/bin/track_task.py queue --jobid=${jobid} --taskid=${taskid} --task='postimage' --submission_time=`date +%s` --batch_file=${script} \
+    track_task.py queue --jobid=${jobid} --taskid=${taskid} --task='postimage' --submission_time=`date +%s` --batch_file=${script} \
                         --obs_id=${obs} --stderr=${obserror} --stdout=${obsoutput}
 
     echo $obsoutput

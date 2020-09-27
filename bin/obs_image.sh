@@ -86,7 +86,12 @@ fi
 
 if [[ ! -z ${dep} ]]
 then
-    depend="--dependency=afterok:${dep}"
+    if [[ -f ${obsnum} ]]
+    then
+        depend="--dependency=aftercorr:${dep}"
+    else
+        depend="--dependency=afterok:${dep}"
+    fi
 fi
 
 if [[ -z ${account} ]]
@@ -97,10 +102,8 @@ fi
 # Establish job array options
 if [[ -f ${obsnum} ]]
 then
-    echo "${obsnum} is a file that exists, proceeding with job-array set up"
     numfiles=$(wc -l ${obsnum} | awk '{print $1}')
     arrayline="#SBATCH --array=1-${numfiles}"
-    echo "Number of obsids to process: ${numfiles}"
 else
     numfiles=1
     arrayline=''

@@ -88,7 +88,7 @@ fi
 # Establish job array options
 if [[ -f ${obsnum} ]]
 then
-    echo "${obsnum} is a file that exists, proceeding with job-array set up"
+    # echo "${obsnum} is a file that exists, proceeding with job-array set up"
     numfiles=$(wc -l ${obsnum} | awk '{print $1}')
     jobarray="#SBATCH --array=1-${numfiles}"
 else
@@ -103,7 +103,6 @@ datadir=/astro/mwasci/$pipeuser/$project
 
 if [[ -f ${obsnum} ]]
 then
-    echo "Detected a list of obsids, selecting the first to set cotter configurables"
     testobs=$(sed -n -e 1p ${obsnum})
 else
     testobs=${obsnum}
@@ -126,11 +125,11 @@ elif [[ $testobs -ge 1191580576 ]] ; then
     if [[ -z $timeres ]] ; then timeres=4 ; fi
 fi
 
-echo "Observation configurables are"
-echo "- Telescope: ${telescope}"
-echo "- Basescale: ${basescale}"
-echo "- Freq Res.: ${freqres}"
-echo "- Time Res.: ${timeres}"
+# echo "Observation configurables are"
+# echo "- Telescope: ${telescope}"
+# echo "- Basescale: ${basescale}"
+# echo "- Freq Res.: ${freqres}"
+# echo "- Time Res.: ${timeres}"
 
 script="${codedir}queue/cotter_${obsnum}.sh"
 cat ${codedir}bin/cotter.tmpl | sed -e "s:OBSNUM:${obsnum}:g" \

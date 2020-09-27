@@ -93,7 +93,12 @@ fi
 
 if [[ ! -z ${dep} ]]
 then
-    dep="--dependency=afterok:${dep}"
+    if [[ -f ${obsnum} ]]
+    then
+        depend="--dependency=aftercorr:${dep}"
+    else
+        depend="--dependency=afterok:${dep}"
+    fi
 fi
 
 if [[ -z ${account} ]]
@@ -104,10 +109,8 @@ fi
 # Establish job array options
 if [[ -f ${obsnum} ]]
 then
-    echo "${obsnum} is a file that exists, proceeding with job-array set up"
     numfiles=$(wc -l ${obsnum} | awk '{print $1}')
     arrayline="#SBATCH --array=1-${numfiles}"
-    echo "Number of obsids to process: ${numfiles}"
 else
     numfiles=1
     arrayline=''
@@ -148,7 +151,7 @@ then
     error="${error}_%a"
 fi
 
-sub="sbatch --begin=now+15 --output=${output} --error=${error} ${dep} ${queue} ${script}"
+sub="sbatch --begin=now+15 --output=${output} --error=${error} ${depend} ${queue} ${script}"
 if [[ ! -z ${tst} ]]
 then
     echo "script is ${script}"
@@ -159,6 +162,7 @@ fi
     
 # submit job
 jobid=($(${sub}))
+echo ${jobid[@]} >&2
 jobid=${jobid[3]}
 
 echo "Submitted ${script} as ${jobid} . Follow progress here:"

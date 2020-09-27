@@ -22,7 +22,7 @@ then
 
     echo "obsfile ${obsnum}"
     obsnum=$(sed -n -e ${SLURM_ARRAY_TASK_ID}p ${obsnum})
-    echo "postimage obsid ${obsnum}"
+    echo "archive obsid ${obsnum}"
 else
     taskid=1
     jobid=${SLURM_JOB_ID}
