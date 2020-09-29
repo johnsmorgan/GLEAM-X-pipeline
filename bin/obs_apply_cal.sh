@@ -162,7 +162,6 @@ fi
     
 # submit job
 jobid=($(${sub}))
-echo ${jobid[@]} >&2
 jobid=${jobid[3]}
 
 echo "Submitted ${script} as ${jobid} . Follow progress here:"
