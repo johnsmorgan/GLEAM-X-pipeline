@@ -106,7 +106,7 @@ do
 
         if [[ ! -e "${obsnum}_deep-${subchan}-image-pb_warp.fits" ]]
         then
-            fits_warp.py --incat "/${obsnum}_deep-${subchan}-image-pb_comp.fits" \
+            fits_warp.py --incat "./${obsnum}_deep-${subchan}-image-pb_comp.fits" \
                          --refcat "${MODEL_CATALOGUE}" \
                          --corrected "/${obsnum}_deep-${subchan}-image-pb_comp_warp-corrected.fits" \
                          --suffix warp \
